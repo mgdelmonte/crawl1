@@ -323,6 +323,8 @@ static const ability_def Ability_List[] =
 #endif
     { ABIL_DAMNATION, "Hurl Damnation",
         0, 150, 0, {fail_basis::xl, 50, 1}, abflag::none },
+    { ABIL_WORD_OF_CHAOS, "Word of Chaos",
+        6, 0, 0, {fail_basis::xl, 50, 1}, abflag::max_hp_drain },
 
     { ABIL_DIG, "Dig", 0, 0, 0, {}, abflag::instant | abflag::none },
     { ABIL_SHAFT_SELF, "Shaft Self", 0, 0, 0, {}, abflag::delay },
@@ -1330,11 +1332,19 @@ bool activate_ability()
 
 static bool _can_movement_ability(bool quiet)
 {
-    if (!you.attribute[ATTR_HELD])
-        return true;
-    if (!quiet)
-        mprf("You cannot do that while %s.", held_status());
-    return false;
+    if (you.attribute[ATTR_HELD])
+    {
+        if (!quiet)
+            mprf("You cannot do that while %s.", held_status());
+        return false;
+    }
+    else if (you.is_stationary())
+    {
+        if (!quiet)
+            canned_msg(MSG_CANNOT_MOVE);
+        return false;
+    }
+    return true;
 }
 
 static bool _can_hop(bool quiet)
@@ -1419,6 +1429,16 @@ static bool _check_ability_possible(const ability_def& abil, bool quiet = false)
             {
                 mprf("You cannot call out to %s while %s.",
                      god_name(you.religion).c_str(),
+                     you.duration[DUR_WATER_HOLD] ? "unable to breathe"
+                                                  : "silenced");
+            }
+            return false;
+        }
+        if (abil.ability == ABIL_WORD_OF_CHAOS)
+        {
+            if (!quiet)
+            {
+                mprf("You cannot speak a word of chaos while %s.",
                      you.duration[DUR_WATER_HOLD] ? "unable to breathe"
                                                   : "silenced");
             }
@@ -1603,6 +1623,15 @@ static bool _check_ability_possible(const ability_def& abil, bool quiet = false)
     case ABIL_ROLLING_CHARGE:
         return _can_movement_ability(quiet) &&
                                 palentonga_charge_possible(quiet, true);
+
+    case ABIL_WORD_OF_CHAOS:
+        if (you.duration[DUR_WORD_OF_CHAOS_COOLDOWN])
+        {
+            if (!quiet)
+                canned_msg(MSG_CANNOT_DO_YET);
+            return false;
+        }
+        return true;
 
     case ABIL_EVOKE_BLINK:
     {
@@ -2159,12 +2188,15 @@ static spret _do_ability(const ability_def& abil, bool fail, dist *target)
     case ABIL_DAMNATION:
         fail_check();
         if (your_spells(SPELL_HURL_DAMNATION,
-                        you.experience_level * 10,
+                        40 + you.experience_level * 6,
                         false, nullptr, target) == spret::abort)
         {
             return spret::abort;
         }
         break;
+
+    case ABIL_WORD_OF_CHAOS:
+        return word_of_chaos(40 + you.experience_level * 6, fail);
 
     case ABIL_EVOKE_TURN_INVISIBLE:     // cloaks, randarts
         if (!invis_allowed())
@@ -2520,9 +2552,9 @@ static spret _do_ability(const ability_def& abil, bool fail, dist *target)
         if (!spell_direction(*target, beam))
             return spret::abort;
 
-        int power = you.skill(SK_INVOCATIONS, 1)
-                    + random2(1 + you.skill(SK_INVOCATIONS, 1))
-                    + random2(1 + you.skill(SK_INVOCATIONS, 1));
+        int power = you.skill(SK_INVOCATIONS, 2)
+                    + random2(1 + you.skill(SK_INVOCATIONS, 2))
+                    + random2(1 + you.skill(SK_INVOCATIONS, 2));
 
         // Since the actual beam is random, check with BEAM_MMISSILE.
         if (!player_tracer(ZAP_DEBUGGING_RAY, power, beam, beam.range))
@@ -2533,12 +2565,10 @@ static spret _do_ability(const ability_def& abil, bool fail, dist *target)
             beam.origin_spell = SPELL_NO_SPELL; // let zapping reset this
             zap_type ztype =
                 random_choose(ZAP_BOLT_OF_FIRE,
-                              ZAP_FIREBALL,
                               ZAP_LIGHTNING_BOLT,
-                              ZAP_STICKY_FLAME,
-                              ZAP_IRON_SHOT,
+                              ZAP_BOLT_OF_MAGMA,
                               ZAP_BOLT_OF_DRAINING,
-                              ZAP_ORB_OF_ELECTRICITY);
+                              ZAP_CORROSIVE_BOLT);
             zapping(ztype, power, beam);
         }
         break;
@@ -3405,6 +3435,9 @@ bool player_has_ability(ability_type abil, bool include_unusable)
     // mutations
     case ABIL_DAMNATION:
         return you.get_mutation_level(MUT_HURL_DAMNATION);
+    case ABIL_WORD_OF_CHAOS:
+        return you.get_mutation_level(MUT_WORD_OF_CHAOS)
+                && (!silenced(you.pos()) || include_unusable);
     case ABIL_END_TRANSFORMATION:
         return you.duration[DUR_TRANSFORMATION] && !you.transform_uncancellable;
     // TODO: other god abilities
@@ -3467,6 +3500,7 @@ vector<talent> your_talents(bool check_confused, bool include_unusable, bool ign
             ABIL_REVIVIFY,
             ABIL_EXSANGUINATE,
             ABIL_DAMNATION,
+            ABIL_WORD_OF_CHAOS,
             ABIL_END_TRANSFORMATION,
             ABIL_RENOUNCE_RELIGION,
             ABIL_CONVERT_TO_BEOGH,

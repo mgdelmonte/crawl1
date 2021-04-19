@@ -1035,13 +1035,15 @@ static const mutation_def mut_data[] =
   {"You feel more spiritual.","",""},
 },
 
+#if TAG_MAJOR_VERSION == 34
 { MUT_STOCHASTIC_TORMENT_RESISTANCE, 0, 1, mutflag::good, false,
-  "50% torment resistance",
+  "torment resistance",
 
-  {"You are somewhat able to resist unholy torments (1 in 2 success).","",""},
+  {"You are somewhat able to resist unholy torments.","",""},
   {"You feel a strange anaesthesia.", "", ""},
   {"", "", ""},
 },
+#endif
 
 { MUT_PASSIVE_MAPPING, 3, 3, mutflag::good, false,
   "sense surroundings",
@@ -1095,12 +1097,12 @@ static const mutation_def mut_data[] =
 },
 #endif
 
-{ MUT_PASSIVE_FREEZE, 0, 1, mutflag::good, false,
+{ MUT_PASSIVE_FREEZE, 1, 1, mutflag::good, false,
   "passive freeze",
 
   {"A frigid envelope surrounds you and freezes all who hurt you.", "", ""},
   {"Your skin feels very cold.", "", ""},
-  {"", "", ""},
+  {"Your skin warms up.", "", ""},
 },
 
 { MUT_NIGHTSTALKER, 0, 3, mutflag::good, false,
@@ -1239,9 +1241,9 @@ static const mutation_def mut_data[] =
 { MUT_TRANSLUCENT_SKIN, 0, 3, mutflag::good | mutflag::jiyva, true,
   "translucent skin",
 
-  {"Your translucent skin slightly reduces your foes' accuracy. (Stealth)",
-   "Your translucent skin reduces your foes' accuracy. (Stealth)",
-   "Your transparent skin significantly reduces your foes' accuracy. (Stealth)"},
+  {"Your translucent skin slightly reduces your foes' accuracy. (Stealth+)",
+   "Your translucent skin reduces your foes' accuracy. (Stealth+)",
+   "Your transparent skin significantly reduces your foes' accuracy. (Stealth+)"},
 
   {"Your skin becomes partially translucent.",
    "Your skin becomes more translucent.",
@@ -1460,9 +1462,9 @@ static const mutation_def mut_data[] =
 { MUT_THIN_SKELETAL_STRUCTURE, 2, 3, mutflag::good, false,
   "thin skeletal structure",
 
-  {"You have a somewhat thin skeletal structure. (Dex +2, Stealth)",
-   "You have a moderately thin skeletal structure. (Dex +4, Stealth+)",
-   "You have an unnaturally thin skeletal structure. (Dex +6, Stealth++)"},
+  {"You have a somewhat thin skeletal structure. (Dex +2, Stealth+)",
+   "You have a moderately thin skeletal structure. (Dex +4, Stealth++)",
+   "You have an unnaturally thin skeletal structure. (Dex +6, Stealth+++)"},
 
   {"Your bones become slightly less dense.",
    "Your bones become somewhat less dense.",
@@ -1675,6 +1677,47 @@ static const mutation_def mut_data[] =
 
   {"Your melee attacks may debilitate your foes.", "", ""},
   {"An ominous black mark forms on your body.", "", ""},
+  {"", "", ""},
+},
+
+{ MUT_SILENCE_AURA, 0, 1, mutflag::good, false,
+  "aura of silence",
+
+  {"You are surrounded by an aura of silence.", "", ""},
+  {"An unnatural silence shrouds you.", "", ""},
+  {"", "", ""},
+},
+
+{ MUT_HEX_ENHANCER, 0, 1, mutflag::good, false,
+  "bedeviling",
+
+  {"Your maledictions are enhanced.", "", ""},
+  {"You feel devilish.", "", ""},
+  {"", "", ""},
+},
+
+{ MUT_CORRUPTING_PRESENCE, 0, 2, mutflag::good, false,
+  "corrupting presence",
+
+  {"Your presence sometimes corrodes those you injure.",
+   "Your presence sometimes corrodes or deforms those you injure.", ""},
+  {"You feel corrupt.", "Your corrupting presence intensifies.", ""},
+  {"", "", ""},
+},
+
+{ MUT_WORD_OF_CHAOS, 0, 1, mutflag::good, false,
+  "word of chaos",
+
+  {"You can speak a Word of Chaos.", "", ""},
+  {"Your tongue twists.", "", ""},
+  {"", "", ""},
+},
+
+{ MUT_DEMONIC_WILL, 0, 1, mutflag::good, false,
+  "demonic willpower",
+
+  {"You punish those that try to bend your will. (Will+)", "", ""},
+  {"You feel willful.", "", ""},
   {"", "", ""},
 },
 
@@ -1977,7 +2020,7 @@ static const mutation_def mut_data[] =
 { MUT_PAWS, 0, 1, mutflag::good, true,
   "stealthy paws",
 
-  {"Your stealthy paws help you sneak and pounce on unaware monsters.", "", ""},
+  {"Your paws help you pounce on unaware monsters.", "", ""},
   {"", "", ""},
   {"", "", ""},
 },

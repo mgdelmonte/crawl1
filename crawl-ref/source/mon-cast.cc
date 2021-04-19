@@ -1284,16 +1284,6 @@ static god_type _find_god(const monster &mons, mon_spell_slot_flags flags)
     return flags & MON_SPELL_WIZARD ? GOD_NO_GOD : mons.god;
 }
 
-static spell_type _random_bolt_spell()
-{
-    return random_choose(SPELL_VENOM_BOLT,
-                         SPELL_BOLT_OF_DRAINING,
-                         SPELL_BOLT_OF_FIRE,
-                         SPELL_LIGHTNING_BOLT,
-                         SPELL_QUICKSILVER_BOLT,
-                         SPELL_CORROSIVE_BOLT);
-}
-
 static spell_type _major_destruction_spell()
 {
     return random_choose(SPELL_BOLT_OF_FIRE,
@@ -1338,9 +1328,7 @@ bolt mons_spell_beam(const monster* mons, spell_type spell_cast, int power,
 
     spell_type real_spell = spell_cast;
 
-    if (spell_cast == SPELL_RANDOM_BOLT)
-        real_spell = _random_bolt_spell();
-    else if (spell_cast == SPELL_MAJOR_DESTRUCTION)
+    if (spell_cast == SPELL_MAJOR_DESTRUCTION)
         real_spell = _major_destruction_spell();
     else if (spell_cast == SPELL_LEGENDARY_DESTRUCTION)
     {
@@ -3271,9 +3259,6 @@ static bool _torment_vulnerable(const actor* victim)
 {
     if (!victim)
         return false;
-    if (victim->is_player())
-        return !player_res_torment(false);
-
     return !victim->res_torment();
 }
 
@@ -7721,7 +7706,7 @@ static ai_action::goodness _monster_spell_goodness(monster* mon, mon_spell_slot 
     case SPELL_SYMBOL_OF_TORMENT:
         if (you.visible_to(mon)
             && friendly
-            && !player_res_torment(false)
+            && !you.res_torment()
             && !player_kiku_res_torment())
         {
             return ai_action::bad();

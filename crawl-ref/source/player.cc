@@ -1458,34 +1458,6 @@ int player_res_electricity(bool calc_unid, bool temp, bool items)
     return re;
 }
 
-/**
- * Is the player character immune to torment?
- *
- * @param random    Whether to include unreliable effects (stochastic resist)
- * @return          Whether the player resists a given instance of torment; if
- *                  random is passed, the result may vary from call to call.
- */
-bool player_res_torment(bool random)
-{
-    if (you.get_mutation_level(MUT_TORMENT_RESISTANCE) >= 2)
-        return true;
-
-    if (random
-        && you.get_mutation_level(MUT_STOCHASTIC_TORMENT_RESISTANCE)
-        && coinflip())
-    {
-        return true;
-    }
-
-    return get_form()->res_neg() == 3
-           || you.has_mutation(MUT_VAMPIRISM) && !you.vampire_alive
-           || you.petrified()
-#if TAG_MAJOR_VERSION == 34
-           || player_equip_unrand(UNRAND_ETERNAL_TORMENT)
-#endif
-           ;
-}
-
 // Kiku protects you from torment to a degree.
 bool player_kiku_res_torment()
 {
@@ -1663,7 +1635,12 @@ int player_spec_conj()
 
 int player_spec_hex()
 {
-    return 0;
+    int sh = 0;
+
+    // Demonspawn mutation
+    sh += you.get_mutation_level(MUT_HEX_ENHANCER);
+
+    return sh;
 }
 
 int player_spec_summ()
@@ -2997,9 +2974,8 @@ int player_stealth()
     stealth += (STEALTH_PIP / 3) * you.get_mutation_level(MUT_NIGHTSTALKER);
     stealth += STEALTH_PIP * you.get_mutation_level(MUT_THIN_SKELETAL_STRUCTURE);
     stealth += STEALTH_PIP * you.get_mutation_level(MUT_CAMOUFLAGE);
-    const int how_transparent = you.get_mutation_level(MUT_TRANSLUCENT_SKIN);
-    if (how_transparent)
-        stealth += 15 * (how_transparent);
+    if (you.has_mutation(MUT_TRANSLUCENT_SKIN))
+        stealth += STEALTH_PIP;
 
     // Radiating silence is the negative complement of shouting all the
     // time... a sudden change from background noise to no noise is going
@@ -3014,19 +2990,12 @@ int player_stealth()
     if (you.has_mutation(MUT_VAMPIRISM) && !you.vampire_alive)
         stealth += STEALTH_PIP * 2;
 
-    if (!you.airborne())
+    if (feat_is_water(env.grid(you.pos())))
     {
-        if (feat_is_water(env.grid(you.pos())))
-        {
-            if (you.has_mutation(MUT_NIMBLE_SWIMMER))
-                stealth += STEALTH_PIP;
-            else if (you.in_water() && !you.can_swim() && !you.extra_balanced())
-                stealth /= 2;       // splashy-splashy
-        }
-        else if (you.has_usable_hooves())
-            stealth -= 5 + 5 * you.get_mutation_level(MUT_HOOVES);
-        else if (you.has_mutation(MUT_PAWS))
-            stealth += 20; // XX why is this 2/5 of a regular STEALTH_PIP?
+        if (you.has_mutation(MUT_NIMBLE_SWIMMER))
+            stealth += STEALTH_PIP;
+        else if (you.in_water() && !you.can_swim() && !you.extra_balanced())
+            stealth /= 2;       // splashy-splashy
     }
 
     // If you've been tagged with Corona or are Glowing, the glow
@@ -6242,7 +6211,16 @@ int player::res_negative_energy(bool intrinsic_only) const
 
 bool player::res_torment() const
 {
-    return player_res_torment();
+    if (you.get_mutation_level(MUT_TORMENT_RESISTANCE) >= 2)
+        return true;
+
+    return get_form()->res_neg() == 3
+           || you.has_mutation(MUT_VAMPIRISM) && !you.vampire_alive
+           || you.petrified()
+#if TAG_MAJOR_VERSION == 34
+           || player_equip_unrand(UNRAND_ETERNAL_TORMENT)
+#endif
+           ;
 }
 
 bool player::res_tornado() const
@@ -6298,6 +6276,7 @@ int player_willpower(bool calc_unid, bool temp)
 
     // Mutations
     rm += WL_PIP * you.get_mutation_level(MUT_STRONG_WILLED);
+    rm += WL_PIP * you.get_mutation_level(MUT_DEMONIC_WILL);
     rm -= WL_PIP * you.get_mutation_level(MUT_WEAK_WILLED);
 
     // transformations

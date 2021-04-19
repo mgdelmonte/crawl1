@@ -78,9 +78,13 @@ anyone adjacent, and are not affected by any means of protection, such as armour
 or resistances. However, certain creatures, usually those able to invoke
 damnation themselves, are entirely unscathed by damnation.
 %%%%
-Cancel Portal Projectile ability
+Word of Chaos ability
 
-Ends your Portal Projectile status.
+Speaks a word of chaos, forcing enemies nearby to blink away from the user.
+Additionally, those affected may be slowed, ensnared, or terrified by the
+experience. Invoking a word of chaos is no easy feat and will drain the user's
+maximum health somewhat, and the ability then cannot be used again for a short
+time.
 %%%%
 Heal Wounds ability
 
@@ -104,10 +108,11 @@ a shaft trap. It takes some time to dig the shaft.
 %%%%
 Rolling Charge ability
 
-Roll at a foe with a clatter of scales, uncurl, and strike! The further you go,
-the more momentum will be added to the force of your strike. You roll with
-sufficient speed to dodge traps and harmful terrain along the way, but not at
-your destination.
+Rolls at a foe with a clatter of scales, then uncurls and strikes them in melee
+with increased accuracy. The greater the distance of the roll, the more
+momentum will be added to the force of your strike. You roll with sufficient
+speed to dodge traps and harmful terrain along the way, but not at your
+destination.
 %%%%
 Evoke Blink ability
 
@@ -175,9 +180,8 @@ by Invocations skill.
 Cleansing Flame ability
 
 Invokes a huge blast of divine fury centered on the user, severely damaging
-undead and demons and dealing damage to all other hostile creatures. The user's
-allies are never affected. The power of the blast is increased by Invocations
-skill.
+undead and demons and dealing damage to all other hostile creatures. The power
+of the blast is increased by Invocations skill.
 %%%%
 Summon Divine Warrior ability
 

@@ -1033,7 +1033,7 @@ void bolt::affect_cell()
 
     // If the player can ever walk through walls, this will need
     // special-casing too.
-    bool hit_player = found_player();
+    bool hit_player = found_player() && !ignores_player();
     if (hit_player && can_affect_actor(&you))
     {
         const int prev_reflections = reflections;
@@ -2261,8 +2261,7 @@ bool bolt::is_bouncy(dungeon_feature_type feat) const
         return true;
     }
 
-    if ((flavour == BEAM_CRYSTAL || real_flavour == BEAM_CRYSTAL
-         || flavour == BEAM_BOUNCY_TRACER)
+    if ((flavour == BEAM_CRYSTAL || real_flavour == BEAM_CRYSTAL)
         && feat_is_solid(feat)
         && !feat_is_tree(feat))
     {
@@ -3215,6 +3214,21 @@ void bolt::affect_player_enchantment(bool resistible)
                 mprf("You%s", you.resist_margin_phrase(margin).c_str());
             }
         }
+
+        // punish the monster if we're a willful demon
+        if (you.get_mutation_level(MUT_DEMONIC_WILL))
+        {
+            monster* mon = monster_by_mid(source_id);
+            if (mon && mon->alive())
+            {
+                const int dam = 3 + random2(1 + div_rand_round(ench_power, 10));
+                mprf("Your will lashes out at %s%s",
+                     mon->name(DESC_THE).c_str(),
+                     attack_strength_punctuation(dam).c_str());
+                mon->hurt(&you, dam);
+            }
+        }
+
         // You *could* have gotten a free teleportation in the Abyss,
         // but no, you resisted.
         if (flavour == BEAM_TELEPORT && player_in_branch(BRANCH_ABYSS))
@@ -3726,6 +3740,9 @@ void bolt::affect_player()
 {
     hit_count[MID_PLAYER]++;
 
+    if (ignores_player())
+        return;
+
     // Explosions only have an effect during their explosion phase.
     // Special cases can be handled here.
     if (is_explosion && !in_explosion_phase)
@@ -3734,10 +3751,6 @@ void bolt::affect_player()
         finish_beam();
         return;
     }
-
-    // Digging -- don't care.
-    if (flavour == BEAM_DIGGING)
-        return;
 
     if (is_tracer)
     {
@@ -4004,6 +4017,23 @@ void bolt::affect_player()
             you.duration[DUR_FROZEN] = (2 + random2(3)) * BASELINE_DELAY;
         }
     }
+}
+
+bool bolt::ignores_player() const
+{
+
+    // Digging -- don't care.
+    if (flavour == BEAM_DIGGING)
+        return true;
+
+    if (agent() && agent()->is_monster()
+        && mons_is_hepliaklqana_ancestor(agent()->as_monster()->type))
+    {
+        // friends!
+        return true;
+    }
+
+    return false;
 }
 
 int bolt::apply_AC(const actor *victim, int hurted)
@@ -6532,7 +6562,6 @@ static string _beam_type_name(beam_type type)
     case BEAM_CRYSTAL:               return "crystal bolt";
     case BEAM_DRAIN_MAGIC:           return "drain magic";
     case BEAM_TUKIMAS_DANCE:         return "tukima's dance";
-    case BEAM_BOUNCY_TRACER:         return "bouncy tracer";
     case BEAM_DEATH_RATTLE:          return "breath of the dead";
     case BEAM_RESISTANCE:            return "resistance";
     case BEAM_UNRAVELLING:           return "unravelling";
@@ -6661,14 +6690,17 @@ bool shoot_through_monster(const bolt& beam, const monster* victim)
         origin_attitude = temp->attitude;
     }
 
+    // Fedhas logic: the alignment check is to allow a penanced player
+    // to continue to fight hostile plants, in case what they angered can
+    // fight back
     return (origin_worships_fedhas
-            && fedhas_protects(victim))
+            && fedhas_protects(victim)
+            && (mons_atts_aligned(victim->attitude, origin_attitude)
+               || victim->neutral()))
+           // Player guardians
            || (originator->is_player()
-               && testbits(victim->flags, MF_DEMONIC_GUARDIAN))
-           && !beam.is_enchantment()
-           && beam.origin_spell != SPELL_CHAIN_LIGHTNING
-           && (mons_atts_aligned(victim->attitude, origin_attitude)
-               || victim->neutral());
+               && (testbits(victim->flags, MF_DEMONIC_GUARDIAN)
+                   || mons_is_hepliaklqana_ancestor(victim->type)));
 }
 
 /**

@@ -2640,16 +2640,15 @@ static const facet_def _demon_facets[] =
     { 2, { MUT_MANA_REGENERATION, MUT_MANA_SHIELD, MUT_MANA_LINK },
       { -33, 0, 0 } },
     // Tier 3 facets
-    { 3, { MUT_HEAT_RESISTANCE, MUT_FLAME_CLOUD_IMMUNITY, MUT_HURL_DAMNATION },
-      { 50, 50, 50 } },
-    { 3, { MUT_COLD_RESISTANCE, MUT_FREEZING_CLOUD_IMMUNITY, MUT_PASSIVE_FREEZE },
+    { 3, { MUT_DEMONIC_WILL, MUT_TORMENT_RESISTANCE, MUT_HURL_DAMNATION },
       { 50, 50, 50 } },
     { 3, { MUT_ROBUST, MUT_ROBUST, MUT_ROBUST },
       { 50, 50, 50 } },
-    { 3, { MUT_NEGATIVE_ENERGY_RESISTANCE, MUT_STOCHASTIC_TORMENT_RESISTANCE,
-           MUT_BLACK_MARK },
+    { 3, { MUT_HEX_ENHANCER, MUT_BLACK_MARK, MUT_SILENCE_AURA },
       { 50, 50, 50 } },
     { 3, { MUT_AUGMENTATION, MUT_AUGMENTATION, MUT_AUGMENTATION },
+      { 50, 50, 50 } },
+    { 3, { MUT_CORRUPTING_PRESENCE, MUT_CORRUPTING_PRESENCE, MUT_WORD_OF_CHAOS },
       { 50, 50, 50 } },
 };
 
@@ -2700,8 +2699,7 @@ try_again:
 
     ret.clear();
     int absfacet = 0;
-    int ice_elemental = 0;
-    int fire_elemental = 0;
+    int elemental = 0;
     int cloud_producing = 0;
 
     set<const facet_def *> facets_used;
@@ -2730,11 +2728,8 @@ try_again:
 
                 if (i==0)
                 {
-                    if (m == MUT_COLD_RESISTANCE || m == MUT_CONDENSATION_SHIELD)
-                        ice_elemental++;
-
-                    if (m == MUT_HEAT_RESISTANCE || m == MUT_IGNITE_BLOOD)
-                        fire_elemental++;
+                    if (m == MUT_CONDENSATION_SHIELD || m == MUT_IGNITE_BLOOD)
+                        elemental++;
 
                     if (m == MUT_FOUL_STENCH || m == MUT_IGNITE_BLOOD)
                         cloud_producing++;
@@ -2745,7 +2740,7 @@ try_again:
         }
     }
 
-    if (ice_elemental + fire_elemental > 1)
+    if (elemental > 1)
         goto try_again;
 
     if (cloud_producing > 1)

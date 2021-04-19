@@ -1017,7 +1017,7 @@ static void _spellcasting_side_effects(spell_type spell, god_type god,
         // Casting pain costs 1 hp.
         // Deep Dwarves' damage reduction always blocks at least 1 hp.
         if (spell == SPELL_PAIN
-            && (you.species != SP_DEEP_DWARF && !player_res_torment()))
+            && (you.species != SP_DEEP_DWARF && !you.res_torment()))
         {
             dec_hp(1, false);
         }
@@ -1262,9 +1262,6 @@ unique_ptr<targeter> find_spell_targeter(spell_type spell, int pow, int range)
                                               return you.pos() != p; });
     case SPELL_VIOLENT_UNRAVELLING:
         return make_unique<targeter_unravelling>(&you, range, pow);
-    case SPELL_RANDOM_BOLT:
-        return make_unique<targeter_beam>(&you, range, ZAP_CRYSTAL_BOLT, pow,
-                                          0, 0);
     case SPELL_INFESTATION:
         return make_unique<targeter_smite>(&you, range, 2, 2, false,
                                            [](const coord_def& p) -> bool {
@@ -1498,7 +1495,7 @@ static vector<string> _desc_hit_chance(const monster_info& mi, targeter* hitfunc
     const int hit_pct = _to_hit_pct(mi, acc, beam_hitf->beam.pierce);
     if (hit_pct == -1)
         return vector<string>{};
-    return vector<string>{make_stringf("%d%% to evade", 100 - hit_pct)};
+    return vector<string>{make_stringf("%d%% to hit", hit_pct)};
 }
 
 static vector<string> _desc_intoxicate_chance(const monster_info& mi,
@@ -2327,9 +2324,6 @@ static spret _do_cast(spell_type spell, int powc, const dist& spd,
 
     case SPELL_GLACIATE:
         return cast_glaciate(&you, powc, target, fail);
-
-    case SPELL_RANDOM_BOLT:
-        return cast_random_bolt(powc, beam, fail);
 
     case SPELL_POISONOUS_VAPOURS:
         return cast_poisonous_vapours(powc, spd, fail);

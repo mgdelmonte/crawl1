@@ -1398,7 +1398,8 @@ bool vehumet_supports_spell(spell_type spell)
         || spell == SPELL_IGNITION
         || spell == SPELL_FROZEN_RAMPARTS
         || spell == SPELL_ABSOLUTE_ZERO
-        || spell == SPELL_NOXIOUS_BOG)
+        || spell == SPELL_NOXIOUS_BOG
+        || spell == SPELL_POISONOUS_VAPOURS)
     {
         return true;
     }
@@ -5625,7 +5626,8 @@ spret hepliaklqana_transference(bool fail)
 
     if (victim == ancestor)
     {
-        mpr("You can't transfer your ancestor with themself.");
+        mprf("You can't transfer your ancestor with %s.",
+             ancestor->pronoun(PRONOUN_REFLEXIVE).c_str());
         return spret::abort;
     }
 
@@ -5645,8 +5647,7 @@ spret hepliaklqana_transference(bool fail)
     const bool uninhabitable = victim && !victim->is_habitable(destination);
     if (uninhabitable && victim_visible)
     {
-        mprf("%s can't be transferred into %s.",
-             victim->name(DESC_THE).c_str(), feat_type_name(env.grid(destination)));
+        mprf("%s can't be transferred there.", victim->name(DESC_THE).c_str());
         return spret::abort;
     }
 

@@ -3424,6 +3424,8 @@ tileidx_t tileidx_ability(const ability_type ability)
     // Demonspawn-only
     case ABIL_DAMNATION:
         return TILEG_ABILITY_HURL_DAMNATION;
+    case ABIL_WORD_OF_CHAOS:
+        return TILEG_ERROR; // TODO
     // Vampires
     case ABIL_TRAN_BAT:
         return TILEG_ABILITY_BAT_FORM;
@@ -4051,7 +4053,7 @@ tileidx_t tileidx_enchant_equ(const item_def &item, tileidx_t tile, bool player)
 
     const int etype = enchant_to_int(item);
 
-    // XXX: only helmets and robes have variants, but it would be nice
+    // XXX: only helmets, robes and boots have variants, but it would be nice
     // if this weren't hardcoded.
     if (tile == TILE_THELM_HELM)
     {
@@ -4085,6 +4087,24 @@ tileidx_t tileidx_enchant_equ(const item_def &item, tileidx_t tile, bool player)
                 break;
             default:
                 tile = _modrng(item.rnd, TILE_ARM_ROBE_FIRST, TILE_ARM_ROBE_LAST);
+        }
+        return tile;
+    }
+
+    if (tile == TILE_ARM_BOOTS)
+    {
+        switch (etype)
+        {
+            case 1:
+            case 2:
+            case 3:
+                tile = _modrng(item.rnd, TILE_ARM_BOOTS_EGO_FIRST, TILE_ARM_BOOTS_EGO_LAST);
+                break;
+            case 4:
+                tile = _modrng(item.rnd, TILE_ARM_BOOTS_ART_FIRST, TILE_ARM_BOOTS_ART_LAST);
+                break;
+            default:
+                tile = _modrng(item.rnd, TILE_ARM_BOOTS_FIRST, TILE_ARM_BOOTS_LAST);
         }
         return tile;
     }

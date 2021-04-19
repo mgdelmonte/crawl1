@@ -43,6 +43,7 @@
 #include "religion.h"
 #include "shout.h"
 #include "spl-damage.h" // cancel_tornado
+#include "spl-monench.h"
 #include "spl-util.h"
 #include "stash.h"
 #include "state.h"
@@ -1078,7 +1079,7 @@ spret cast_manifold_assault(int pow, bool fail, bool real)
     {
         if (mi->friendly() || mi->neutral())
             continue; // this should be enough to avoid penance?
-        if (mons_is_firewood(**mi))
+        if (mons_is_firewood(**mi) || mons_is_projectile(**mi))
             continue;
         if (!you.can_see(**mi))
             continue;
@@ -1606,4 +1607,57 @@ void attract_monsters()
         mi->apply_location_effects(old_pos);
         mons_relocated(mi);
     }
+}
+
+spret word_of_chaos(int pow, bool fail)
+{
+    vector<monster *> visible_targets;
+    vector<monster *> targets;
+    for (monster_near_iterator mi(you.pos(), LOS_NO_TRANS); mi; ++mi)
+    {
+        if (!mons_is_tentacle_or_tentacle_segment(mi->type)
+            && !mons_class_is_stationary(mi->type)
+            && !mons_is_conjured(mi->type)
+            && !mi->friendly())
+        {
+            if (you.can_see(**mi))
+                visible_targets.push_back(*mi);
+            targets.push_back(*mi);
+        }
+    }
+
+    if (visible_targets.empty())
+    {
+        if (!yesno("You cannot see any enemies that you can affect. Speak a "
+                   "word of chaos anyway?", true, 'n'))
+        {
+            canned_msg(MSG_OK);
+            return spret::abort;
+        }
+    }
+
+    fail_check();
+    shuffle_array(targets);
+
+    mprf("You speak a word of chaos!");
+    for (auto mons : targets)
+    {
+        if (mons->no_tele())
+            continue;
+
+        blink_away(mons, &you, false);
+        if (x_chance_in_y(pow, 500))
+            ensnare(mons);
+        if (x_chance_in_y(pow, 500))
+            do_slow_monster(*mons, &you, 20 + random2(pow));
+        if (x_chance_in_y(pow, 500))
+        {
+            mons->add_ench(mon_enchant(ENCH_FEAR, 0, &you));
+            behaviour_event(mons, ME_SCARE, &you);
+        }
+    }
+
+    you.increase_duration(DUR_WORD_OF_CHAOS_COOLDOWN, 15 + random2(10));
+    drain_player(50, false, true);
+    return spret::success;
 }
